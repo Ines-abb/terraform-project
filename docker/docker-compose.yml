@@ -1,0 +1,26 @@
+services:
+  teamcity-server:
+    image: jetbrains/teamcity-server:latest
+    container_name: teamcity-server
+    ports:
+      - "8111:8111"
+    volumes:
+      - ./teamcity-data:/data/teamcity_server/datadir
+      - ./teamcity-logs:/opt/teamcity/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://teamcity-server:8111/healthCheck/ready"]
+
+
+  teamcity-agent:
+    image: jetbrains/teamcity-agent:latest
+    container_name: teamcity-agent
+    depends_on:
+      teamcity-server:
+        condition: service_healthy
+    environment:
+      - SERVER_URL=http://teamcity-server:8111
+      - DOCKER_IN_DOCKER=start
+    volumes:
+      - ./teamcity-agent-conf:/data/teamcity_agent/conf
+    privileged: true
+
